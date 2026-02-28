@@ -1,4 +1,4 @@
-import { IPersonalRepository, CrearEmpleadoInput } from '../../../dominio/repositorios/IPersonalRepository';
+import { IPersonalRepository, CrearEmpleadoInput, ActualizarEmpleadoInput } from '../../../dominio/repositorios/IPersonalRepository';
 import { Personal, PersonalFilterInput, PersonalReferenciasInput, PersonalPaginadoResult } from '../../../dominio/entidades/Personal';
 import { BaseHttpRepository } from './BaseHttpRepository';
 import { GraphQLClient } from '../../http/GraphQLClient';
@@ -282,7 +282,7 @@ export class HttpPersonalRepository extends BaseHttpRepository<Personal> impleme
   /**
    * Buscar empleado por DNI en el sistema PERSONAL
    */
-  async buscarPorDNI(dni: string): Promise<any | null> {
+  async buscarPorDNI(dni: string): Promise<Personal | null> {
     console.log(`[HTTP_PERSONAL_REPO] Buscando empleado con DNI exacto: "${dni}"`);
     
     const query = `
@@ -367,6 +367,40 @@ export class HttpPersonalRepository extends BaseHttpRepository<Personal> impleme
       const errorMessage = (error as Error).message;
       logger.error('Error creando empleado en PERSONAL', { error, input });
       throw new Error(`Error creando empleado: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Actualizar empleado en el sistema PERSONAL
+   */
+  async actualizarEmpleado(id: string, input: ActualizarEmpleadoInput): Promise<void> {
+    console.log('🚀 [HTTP-PERSONAL] Iniciando actualizarEmpleado')
+    console.log('📝 [HTTP-PERSONAL] ID:', id)
+    console.log('📝 [HTTP-PERSONAL] Input:', JSON.stringify(input, null, 2))
+    
+    const mutation = `
+      mutation updateEmpleadoCH($id: ID!, $input: UpdateEmpleadoCHInput!) {
+        updateEmpleadoCH(id: $id, input: $input) {
+          id
+        }
+      }
+    `;
+
+    try {
+      console.log('📡 [HTTP-PERSONAL] Ejecutando this.graphqlRequest')
+      const startTime = Date.now()
+      const response = await this.graphqlRequest(mutation, { id, input }, 'personal-backend');
+      const endTime = Date.now()
+      
+      console.log('✅ [HTTP-PERSONAL] graphqlRequest completado')
+      console.log('⏱️ [HTTP-PERSONAL] Duración:', endTime - startTime, 'ms')
+      console.log('📦 [HTTP-PERSONAL] Response:', JSON.stringify(response, null, 2))
+      
+    } catch (error) {
+      console.log('❌ [HTTP-PERSONAL] Error en actualizarEmpleado:', error)
+      const errorMessage = (error as Error).message;
+      logger.error('Error actualizando empleado en PERSONAL', { error, id, input });
+      throw new Error(`Error actualizando empleado: ${errorMessage}`);
     }
   }
 }

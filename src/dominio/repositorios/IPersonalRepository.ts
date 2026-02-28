@@ -17,6 +17,15 @@ export interface CrearEmpleadoInput {
   usuario_id?: string;
 }
 
+export interface ActualizarEmpleadoInput {
+  celular?: string;
+  correo_personal?: string;
+  correo_corporativo?: string;
+  estado?: boolean;
+  disponibilidad?: boolean;
+  requerimiento_asignado_codigo?: string;
+}
+
 export interface IPersonalRepository extends IBaseRepository<Personal> {
   /**
    * Obtener empleados paginados desde el sistema PERSONAL
@@ -47,4 +56,14 @@ export interface IPersonalRepository extends IBaseRepository<Personal> {
    * Crear un nuevo empleado en el sistema PERSONAL
    */
   crearEmpleado(input: CrearEmpleadoInput): Promise<string>;
+
+  /**
+   * Buscar empleado por DNI en el sistema PERSONAL
+   */
+  buscarPorDNI(dni: string): Promise<Personal | null>;
+
+  /**
+   * Actualizar empleado en el sistema PERSONAL
+   */
+  actualizarEmpleado(id: string, input: ActualizarEmpleadoInput): Promise<void>;
 }

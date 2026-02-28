@@ -8,7 +8,7 @@ import {
   PersonalReferenciasInput,
   PersonalPaginadoResult
 } from '../../dominio/entidades/Personal';
-import { IPersonalRepository, CrearEmpleadoInput } from '../../dominio/repositorios/IPersonalRepository';
+import { IPersonalRepository, CrearEmpleadoInput, ActualizarEmpleadoInput } from '../../dominio/repositorios/IPersonalRepository';
 
 /**
  * Servicio para consumir el endpoint empleadosPaginados del sistema PERSONAL/Personal
@@ -66,7 +66,14 @@ export class PersonalService {
   /**
    * Buscar empleado por DNI en el sistema PERSONAL
    */
-  async buscarPorDNI(dni: string): Promise<any | null> {
-    return await (this.personalRepository as any).buscarPorDNI(dni);
+  async buscarPorDNI(dni: string): Promise<Personal | null> {
+    return await this.personalRepository.buscarPorDNI(dni);
+  }
+
+  /**
+   * Actualizar empleado en el sistema PERSONAL
+   */
+  async actualizarEmpleado(id: string, input: ActualizarEmpleadoInput): Promise<void> {
+    return await this.personalRepository.actualizarEmpleado(id, input);
   }
 }

@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { IConvocatoriaRepository } from '../../dominio/repositorios/IConvocatoriaRepository';
-import { Convocatoria, RecibirConvocatoriaInput } from '../../dominio/entidades/Convocatoria';
+import { Convocatoria, RecibirConvocatoriaInput, ConvocatoriaFilters } from '../../dominio/entidades/Convocatoria';
 
 export class ConvocatoriaService {
   constructor(private readonly convocatoriaRepository: IConvocatoriaRepository) {}
@@ -20,8 +20,8 @@ export class ConvocatoriaService {
     return this.convocatoriaRepository.findById(id);
   }
 
-  async list(limit?: number, offset?: number): Promise<{ convocatorias: Convocatoria[]; totalCount: number }> {
-    return this.convocatoriaRepository.list(limit ?? 50, offset ?? 0);
+  async list(limit?: number, offset?: number, filters?: ConvocatoriaFilters): Promise<{ convocatorias: Convocatoria[]; totalCount: number }> {
+    return this.convocatoriaRepository.list(limit ?? 50, offset ?? 0, filters);
   }
 
   async obtenerConvocatoria(id: string): Promise<Convocatoria | null> {

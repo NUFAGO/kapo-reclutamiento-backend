@@ -392,30 +392,17 @@ export class AplicacionService {
    * Finalizar candidato: crear empleado en PERSONAL, actualizar candidato y convocatoria
    * Optimizado con procesamiento paralelo y caché en memoria
    */
-  async finalizarCandidato(aplicacionId: string, usuarioId?: string): Promise<{
-    aplicacion: any;
-    candidato: any;
-    convocatoria: any;
-    personalId: string;
-  }> {
-    console.log(`🔍 [SERVICE] finalizarCandidato llamado con aplicacionId: ${aplicacionId} - Timestamp: ${new Date().toISOString()}`);
-    console.trace('📍 [SERVICE] Stack trace de llamada a finalizarCandidato');
-    
+  async finalizarCandidato(aplicacionId: string, usuarioId?: string) {
+    console.log(`[FINALIZAR_CANDIDATO] Iniciando proceso para aplicación ID: ${aplicacionId}`);
+
     const session = await mongoose.startSession();
-    console.log(`[FINALIZAR_CANDIDATO] Iniciando proceso optimizado para aplicación ID: ${aplicacionId}`);
-    console.log(`🔍 [SESSION] Session ID: ${session.id}`);
-    console.log(`🔍 [SESSION] Session inTransaction: ${session.inTransaction}`);
 
     try {
       const resultado = await session.withTransaction(async () => {
-        console.log(`🔄 [TRANSACTION] Iniciando transacción para aplicación ID: ${aplicacionId}`);
-        console.log(`🔍 [TRANSACTION] Session inTransaction: ${session.inTransaction}`);
-        console.trace('📍 [TRANSACTION] Stack trace dentro de transacción');
-        
-        // Verificar si ya está finalizado para evitar doble ejecución en la transacción
+        // Verificar si ya está finalizado
         const aplicacionCheck = await this.aplicacionRepository.obtenerPorId(aplicacionId);
         if (aplicacionCheck?.procesoFinalizadoCompleto) {
-          console.log(`⚠️ [TRANSACTION] Aplicación ya finalizada, evitando doble ejecución`);
+          console.log(`[FINALIZAR_CANDIDATO] Aplicación ya finalizada`);
           const candidato = await this.candidatoRepository.obtenerPorId(aplicacionCheck.candidatoId.toString());
           const convocatoria = await this.convocatoriaRepository.findById(aplicacionCheck.convocatoriaId.toString());
           
@@ -427,39 +414,12 @@ export class AplicacionService {
           };
         }
         
-        // 1. Obtener aplicación, candidato y convocatoria en paralelo
-        console.log(`[FINALIZAR_CANDIDATO] Paso 1: Obteniendo datos en paralelo`);
-        
-        const aplicacionPromise = this.aplicacionRepository.obtenerPorId(aplicacionId);
-        const aplicacion = await aplicacionPromise;
-        
+        // Obtener aplicación, candidato y convocatoria
+        const aplicacion = await this.aplicacionRepository.obtenerPorId(aplicacionId);
         if (!aplicacion) {
           throw new Error('Aplicación no encontrada');
         }
 
-        console.log(`[FINALIZAR_CANDIDATO] Estado de finalización actual: procesoFinalizadoCompleto=${aplicacion.procesoFinalizadoCompleto}, fechaFinalizacionProceso=${aplicacion.fechaFinalizacionProceso}`);
-
-        // Obtener candidato para verificar si ya tiene personal_id
-        const candidatoCheck = await this.candidatoRepository.obtenerPorId(aplicacion.candidatoId.toString());
-        console.log(`[FINALIZAR_CANDIDATO] Candidato personal_id actual: ${candidatoCheck?.personal_id}`);
-
-        // Verificar si ya está finalizada (solo por personal_id del candidato, que es committed)
-        if (candidatoCheck?.personal_id) {
-          console.log(`[FINALIZAR_CANDIDATO] Candidato ya tiene empleado asignado (personal_id: ${candidatoCheck.personal_id}), omitiendo proceso`);
-          // Retornar datos existentes
-          const convocatoria = await this.convocatoriaRepository.findById(aplicacion.convocatoriaId.toString());
-          
-          return {
-            aplicacion,
-            candidato: candidatoCheck,
-            convocatoria,
-            personalId: candidatoCheck.personal_id
-          };
-        }
-
-        console.log(`[FINALIZAR_CANDIDATO] Aplicación no está finalizada, procediendo con el proceso`);
-
-        // Obtener candidato y convocatoria en paralelo
         const [candidato, convocatoria] = await Promise.all([
           this.candidatoRepository.obtenerPorId(aplicacion.candidatoId.toString()),
           this.convocatoriaRepository.findById(aplicacion.convocatoriaId.toString())
@@ -472,116 +432,149 @@ export class AplicacionService {
           throw new Error('Convocatoria no encontrada');
         }
 
-        console.log(`[FINALIZAR_CANDIDATO] Datos obtenidos en paralelo:`, {
-          aplicacion: { id: aplicacion.id, estadoKanban: aplicacion.estadoKanban },
-          candidato: { id: candidato.id, dni: candidato.dni, nombres: candidato.nombres },
-          convocatoria: { id: convocatoria.id, codigo: convocatoria.codigo_convocatoria }
-        });
+        // Verificar si empleado ya existe por DNI
+        const empleadoExistente = await this.personalService.buscarPorDNI(candidato.dni);
+        if (empleadoExistente) {
+          console.log(`[FINALIZAR_CANDIDATO] Empleado existente encontrado (ID: ${empleadoExistente.id})`);
+          
+          // Actualizar empleado existente
+          const updateData: any = {
+            estado: true,
+            disponibilidad: true,
+          };
+          if (candidato.correo) {
+            updateData.correo_personal = candidato.correo;
+          }
+          if (candidato.telefono && candidato.telefono.length === 9) {
+            updateData.celular = candidato.telefono;
+          }
+          if (convocatoria.codigo_convocatoria) {
+            updateData.requerimiento_asignado_codigo = convocatoria.codigo_convocatoria;
+          }
+          await this.personalService.actualizarEmpleado(empleadoExistente.id, updateData);
+          
+          const personalId = empleadoExistente.id;
 
-        // 2. Preparar datos para empleado en PERSONAL (procesamiento ligero)
-        console.log(`[FINALIZAR_CANDIDATO] Paso 2: Preparando datos para PERSONAL`);
-        const empleadoInput: CrearEmpleadoInput = {
-          dni: candidato.dni,
-          nombres: candidato.nombres,
-          ap_paterno: candidato.apellidoPaterno,
-          ap_materno: candidato.apellidoMaterno,
-        };
+          // Actualizar candidato y convocatoria
+          const aplicacionActualizada = await this.aplicacionRepository.actualizar(aplicacion.id, {
+            estadoKanban: EstadoKanban.FINALIZADA,
+            procesoFinalizadoCompleto: true,
+            fechaFinalizacionProceso: new Date()
+          }, session);
+          
+          const candidatoActualizadoDb = await this.candidatoRepository.actualizar(candidato.id, {
+            personal_id: personalId,
+            aplicacionesGanadas: (candidato.aplicacionesGanadas || 0) + 1,
+            convocatorias_ganadas: [...(candidato.convocatorias_ganadas || []), convocatoria.id]
+          }, session);
+          
+          // Calcular nuevos ganadores y verificar si finaliza la convocatoria
+          const ganadoresActuales = convocatoria.ganadores_ids || [];
+          const finalizaConvocatoria = ganadoresActuales.length + 1 >= convocatoria.vacantes;
+          
+          console.log(`[FINALIZAR_CANDIDATO] Convocatoria ${convocatoria.id}: ganadores actuales=${ganadoresActuales.length}, vacantes=${convocatoria.vacantes}, finaliza=${finalizaConvocatoria}`);
+          
+          const convocatoriaActualizadaDb = await this.convocatoriaRepository.actualizar(convocatoria.id, {
+            ...convocatoria,
+            ganadores_ids: [...ganadoresActuales, candidato.id],
+            estado_convocatoria: finalizaConvocatoria ? 'FINALIZADA' : convocatoria.estado_convocatoria
+          }, session);
+          
+          // Retornar resultado
+          const resultado = {
+            aplicacion: aplicacionActualizada,
+            candidato: candidatoActualizadoDb,
+            convocatoria: convocatoriaActualizadaDb,
+            personalId
+          };
+          
+          console.log(`[FINALIZAR_CANDIDATO] ✅ Proceso completado - Empleado actualizado: ${personalId}`);
+          return resultado;
+        } else {
+          // Crear empleado
+          console.log(`[FINALIZAR_CANDIDATO] Empleado no encontrado, creando nuevo`);
+          const empleadoInput: CrearEmpleadoInput = {
+            dni: candidato.dni,
+            nombres: candidato.nombres,
+            ap_paterno: candidato.apellidoPaterno,
+            ap_materno: candidato.apellidoMaterno,
+          };
+          if (candidato.telefono && candidato.telefono.length === 9) {
+            empleadoInput.celular = candidato.telefono;
+          }
+          if (candidato.correo) {
+            empleadoInput.correo_personal = candidato.correo;
+          }
+          if (candidato.lugarResidencia) {
+            empleadoInput.direccion = candidato.lugarResidencia;
+          }
+          if (convocatoria.codigo_convocatoria) {
+            empleadoInput.requerimiento_asignado_codigo = convocatoria.codigo_convocatoria;
+          }
+          if (usuarioId) {
+            empleadoInput.usuario_id = usuarioId;
+          }
 
-        // Validaciones y asignaciones condicionales (procesamiento optimizado)
-        if (candidato.telefono && candidato.telefono.length === 9) {
-          empleadoInput.celular = candidato.telefono;
-        }
-        if (candidato.correo) {
-          empleadoInput.correo_personal = candidato.correo;
-        }
-        if (candidato.lugarResidencia) {
-          empleadoInput.direccion = candidato.lugarResidencia;
-        }
-        if (convocatoria.codigo_convocatoria) {
-          empleadoInput.requerimiento_asignado_codigo = convocatoria.codigo_convocatoria;
-        }
-        if (usuarioId) {
-          empleadoInput.usuario_id = usuarioId;
-        }
+          const personalId = await this.personalService.crearEmpleado(empleadoInput);
 
-        let personalId: string;
-
-        // 3. Crear empleado directamente en PERSONAL (confiar en el rollback si hay duplicados)
-        console.log(`[FINALIZAR_CANDIDATO] Paso 3: Creando empleado en PERSONAL`);
-        personalId = await this.personalService.crearEmpleado(empleadoInput);
-        console.log(`[FINALIZAR_CANDIDATO] Empleado creado: ${personalId}`);
-
-        // 4. Preparar actualizaciones en memoria (procesamiento optimizado)
-        console.log(`[FINALIZAR_CANDIDATO] Paso 5: Preparando actualizaciones en memoria`);
-        
-        const ganadoresIds = [...(convocatoria.ganadores_ids || []), candidato.id];
-        const estadoFinal = ganadoresIds.length >= convocatoria.vacantes ? 'FINALIZADA' : convocatoria.estado_convocatoria;
-        
-        const convocatoriaActualizada = {
-          ...convocatoria,
-          ganadores_ids: ganadoresIds,
-          estado_convocatoria: estadoFinal
-        };
-        
-        // 6. Actualizar BD en secuencia (no en paralelo para evitar conflictos de transacción)
-        console.log(`[FINALIZAR_CANDIDATO] Paso 6: Actualizando BD en secuencia`);
-        
-        const aplicacionActualizada = await this.aplicacionRepository.actualizar(aplicacion.id, {
-          estadoKanban: EstadoKanban.FINALIZADA,
-          procesoFinalizadoCompleto: true,
-          fechaFinalizacionProceso: new Date()
-        }, session);
-        
-        const candidatoActualizadoDb = await this.candidatoRepository.actualizar(candidato.id, {
-          personal_id: personalId,
-          aplicacionesGanadas: (candidato.aplicacionesGanadas || 0) + 1,
-          convocatorias_ganadas: [...(candidato.convocatorias_ganadas || []), convocatoria.id]
-        }, session);
-        
-        const convocatoriaActualizadaDb = await this.convocatoriaRepository.actualizar(convocatoria.id, convocatoriaActualizada, session);
-        
-        console.log(`[FINALIZAR_CANDIDATO] BD actualizada exitosamente`);
-        
-        // 6. Retornar resultado
-        const resultado = {
-          aplicacion: aplicacionActualizada,
-          candidato: candidatoActualizadoDb,
-          convocatoria: convocatoriaActualizadaDb,
-          personalId
-        };
-        
-        console.log(`[FINALIZAR_CANDIDATO] ✅ Proceso completado exitosamente`);
-        return resultado;
+          // Actualizar candidato y convocatoria
+          const aplicacionActualizada = await this.aplicacionRepository.actualizar(aplicacion.id, {
+            estadoKanban: EstadoKanban.FINALIZADA,
+            procesoFinalizadoCompleto: true,
+            fechaFinalizacionProceso: new Date()
+          }, session);
+          
+          const candidatoActualizadoDb = await this.candidatoRepository.actualizar(candidato.id, {
+            personal_id: personalId,
+            aplicacionesGanadas: (candidato.aplicacionesGanadas || 0) + 1,
+            convocatorias_ganadas: [...(candidato.convocatorias_ganadas || []), convocatoria.id]
+          }, session);
+          
+          // Calcular nuevos ganadores y verificar si finaliza la convocatoria
+          const ganadoresActuales = convocatoria.ganadores_ids || [];
+          const finalizaConvocatoria = ganadoresActuales.length + 1 >= convocatoria.vacantes;
+          
+          console.log(`[FINALIZAR_CANDIDATO] Convocatoria ${convocatoria.id}: ganadores actuales=${ganadoresActuales.length}, vacantes=${convocatoria.vacantes}, finaliza=${finalizaConvocatoria}`);
+          
+          const convocatoriaActualizadaDb = await this.convocatoriaRepository.actualizar(convocatoria.id, {
+            ...convocatoria,
+            ganadores_ids: [...ganadoresActuales, candidato.id],
+            estado_convocatoria: finalizaConvocatoria ? 'FINALIZADA' : convocatoria.estado_convocatoria
+          }, session);
+          
+          // Retornar resultado
+          const resultado = {
+            aplicacion: aplicacionActualizada,
+            candidato: candidatoActualizadoDb,
+            convocatoria: convocatoriaActualizadaDb,
+            personalId
+          };
+          
+          console.log(`[FINALIZAR_CANDIDATO] ✅ Proceso completado - Empleado creado: ${personalId}`);
+          return resultado;
+        }
       });
 
-      console.log(`[FINALIZAR_CANDIDATO] ✅ Proceso optimizado completado`);
-      console.log(`[FINALIZAR_CANDIDATO] Resumen:`, {
-        personalId: resultado.personalId,
-        tiempo_total: 'optimizado'
-      });
+      console.log(`[FINALIZAR_CANDIDATO] ✅ Completado exitosamente - Empleado: ${resultado.personalId}`);
 
       return resultado;
     } catch (error) {
-      console.error(`[FINALIZAR_CANDIDATO] ❌ Error en proceso optimizado:`, error);
-      console.log(`🔍 [ERROR] Session ID: ${session.id}`);
-      console.log(`🔍 [ERROR] Session inTransaction: ${session.inTransaction}`);
-      console.trace('📍 [ERROR] Stack trace del error en finalizarCandidato');
+      console.error(`[FINALIZAR_CANDIDATO] ❌ Error:`, error instanceof Error ? error.message : error);
       
       // Analizar el tipo de error para identificar retry de MongoDB
       if (error instanceof Error) {
         if (error.message.includes('WriteConflict') || error.message.includes('TransientTransactionError')) {
-          console.log(`🔄 [ERROR] Error de transacción MongoDB detectado: ${error.message}`);
+          console.log(`🔄 Error de transacción MongoDB detectado`);
         }
         if (error.message.includes('duplicate key')) {
-          console.log(`🔄 [ERROR] Error de clave duplicada detectado: ${error.message}`);
+          console.log(`🔄 Error de clave duplicada detectado`);
         }
       }
       
       throw error;
     } finally {
       await session.endSession();
-      console.log(`[FINALIZAR_CANDIDATO] Sesión cerrada`);
-      console.log(`🔍 [FINALLY] Session ID: ${session.id}`);
     }
   }
+
 }

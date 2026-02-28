@@ -4,7 +4,7 @@
 
 import { IResolvers } from '@graphql-tools/utils';
 import { ConvocatoriaService } from '../../../aplicacion/servicios/ConvocatoriaService';
-import { RecibirConvocatoriaInput } from '../../../dominio/entidades/Convocatoria';
+import { RecibirConvocatoriaInput, ConvocatoriaFilters } from '../../../dominio/entidades/Convocatoria';
 import { ErrorHandler } from './ErrorHandler';
 
 export class ConvocatoriaResolver {
@@ -27,9 +27,9 @@ export class ConvocatoriaResolver {
             { requerimientoPersonalId: args.requerimientoPersonalId }
           );
         },
-        convocatorias: async (_: unknown, args: { limit?: number; offset?: number }) => {
+        convocatorias: async (_: unknown, args: { limit?: number; offset?: number; filters?: ConvocatoriaFilters }) => {
           return await ErrorHandler.handleError(
-            async () => await this.convocatoriaService.list(args.limit, args.offset),
+            async () => await this.convocatoriaService.list(args.limit, args.offset, args.filters),
             'convocatorias'
           );
         },

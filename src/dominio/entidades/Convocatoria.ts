@@ -51,3 +51,12 @@ export interface RecibirConvocatoriaInput {
   detalle_staff_snapshot?: Record<string, unknown>;
   ganadores_ids?: string[];
 }
+
+export interface ConvocatoriaFilters {
+  _id?: string;
+  cargo_nombre?: string;
+  categoria_nombre?: string;
+  especialidad_nombre?: string;
+  codigo_convocatoria?: string;
+  estado_convocatoria?: EstadoConvocatoria;
+}

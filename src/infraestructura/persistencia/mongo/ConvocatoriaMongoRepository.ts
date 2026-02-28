@@ -4,7 +4,7 @@
 
 import { ConvocatoriaModel } from './schemas/ConvocatoriaSchema';
 import { IConvocatoriaRepository } from '../../../dominio/repositorios/IConvocatoriaRepository';
-import { Convocatoria, RecibirConvocatoriaInput } from '../../../dominio/entidades/Convocatoria';
+import { Convocatoria, RecibirConvocatoriaInput, ConvocatoriaFilters } from '../../../dominio/entidades/Convocatoria';
 import mongoose from 'mongoose';
 
 export class ConvocatoriaMongoRepository implements IConvocatoriaRepository {
@@ -75,13 +75,44 @@ export class ConvocatoriaMongoRepository implements IConvocatoriaRepository {
     return doc ? this.toDomain(doc) : null;
   }
 
-  async list(limit?: number, offset?: number): Promise<{ convocatorias: Convocatoria[]; totalCount: number }> {
+  async list(limit?: number, offset?: number, filters?: ConvocatoriaFilters): Promise<{ convocatorias: Convocatoria[]; totalCount: number }> {
+    const query: any = {};
+
+    if (filters) {
+      const orConditions: any[] = [];
+
+      if (filters._id) {
+        query._id = filters._id;
+      }
+
+      if (filters.cargo_nombre) {
+        orConditions.push({ cargo_nombre: { $regex: filters.cargo_nombre, $options: 'i' } });
+      }
+      if (filters.categoria_nombre) {
+        orConditions.push({ categoria_nombre: { $regex: filters.categoria_nombre, $options: 'i' } });
+      }
+      if (filters.especialidad_nombre) {
+        orConditions.push({ especialidad_nombre: { $regex: filters.especialidad_nombre, $options: 'i' } });
+      }
+      if (filters.codigo_convocatoria) {
+        orConditions.push({ codigo_convocatoria: { $regex: filters.codigo_convocatoria, $options: 'i' } });
+      }
+
+      if (filters.estado_convocatoria) {
+        query.estado_convocatoria = filters.estado_convocatoria;
+      }
+
+      if (orConditions.length > 0) {
+        query.$or = orConditions;
+      }
+    }
+
     const [docs, totalCount] = await Promise.all([
-      ConvocatoriaModel.find()
+      ConvocatoriaModel.find(query)
         .sort({ fecha_creacion: -1 })
         .skip(offset ?? 0)
         .limit(limit ?? 50),
-      ConvocatoriaModel.countDocuments()
+      ConvocatoriaModel.countDocuments(query)
     ]);
     return {
       convocatorias: docs.map((d) => this.toDomain(d)),

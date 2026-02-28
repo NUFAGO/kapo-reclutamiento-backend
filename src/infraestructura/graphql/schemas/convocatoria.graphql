@@ -58,6 +58,15 @@ input RecibirConvocatoriaInput {
   ganadores_ids: [String!]
 }
 
+input ConvocatoriaFilters {
+  _id: ID
+  cargo_nombre: String
+  categoria_nombre: String
+  especialidad_nombre: String
+  codigo_convocatoria: String
+  estado_convocatoria: EstadoConvocatoria
+}
+
 type ConvocatoriaConnection {
   convocatorias: [Convocatoria!]!
   totalCount: Int!
@@ -66,7 +75,7 @@ type ConvocatoriaConnection {
 extend type Query {
   convocatoria(id: ID!): Convocatoria
   convocatoriaPorRequerimientoPersonalId(requerimientoPersonalId: String!): Convocatoria
-  convocatorias(limit: Int, offset: Int): ConvocatoriaConnection!
+  convocatorias(limit: Int, offset: Int, filters: ConvocatoriaFilters): ConvocatoriaConnection!
 }
 
 extend type Mutation {
