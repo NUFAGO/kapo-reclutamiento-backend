@@ -1,7 +1,7 @@
 // ============================================================================
 // ENTIDAD APLICACION CANDIDATO - Aplicación específica a una convocatoria
 // ============================================================================
-
+// para deploy 
 import { EstadoKanban } from './EstadoKanban';
 
 export interface AplicacionCandidato {
