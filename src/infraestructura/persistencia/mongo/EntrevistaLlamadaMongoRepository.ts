@@ -67,6 +67,18 @@ export class EntrevistaLlamadaMongoRepository extends BaseMongoRepository<Entrev
       observaciones: doc.observaciones,
       resultado: doc.resultado,
 
+      // Campos de versionado
+      version: doc.version,
+      fecha_version: doc.fecha_version,
+      codigo: doc.codigo,
+
+      // Nuevos campos opcionales
+      motivos_salida_empleo: doc.motivos_salida_empleo,
+      licencia_conducir: doc.licencia_conducir,
+      reporte_infocorp: doc.reporte_infocorp,
+      condicion_salud_funciones: doc.condicion_salud_funciones,
+      restriccion_med_funciones: doc.restriccion_med_funciones,
+
       // Metadata
       created_at: doc.created_at,
       updated_at: doc.updated_at
@@ -101,7 +113,17 @@ export class EntrevistaLlamadaMongoRepository extends BaseMongoRepository<Entrev
       entrevistador_id: entrevista.entrevistador_id,
       entrevistador_nombre: entrevista.entrevistador_nombre,
       observaciones: entrevista.observaciones,
-      resultado: entrevista.resultado
+      resultado: entrevista.resultado,
+      // Campos de versionado
+      version: entrevista.version,
+      fecha_version: entrevista.fecha_version,
+      codigo: entrevista.codigo,
+      // Nuevos campos opcionales
+      motivos_salida_empleo: entrevista.motivos_salida_empleo,
+      licencia_conducir: entrevista.licencia_conducir,
+      reporte_infocorp: entrevista.reporte_infocorp,
+      condicion_salud_funciones: entrevista.condicion_salud_funciones,
+      restriccion_med_funciones: entrevista.restriccion_med_funciones
     });
 
     return this.toDomain(doc);
@@ -145,6 +167,16 @@ export class EntrevistaLlamadaMongoRepository extends BaseMongoRepository<Entrev
     if (entrevista.entrevistador_nombre !== undefined) updateData.entrevistador_nombre = entrevista.entrevistador_nombre;
     if (entrevista.observaciones !== undefined) updateData.observaciones = entrevista.observaciones;
     if (entrevista.resultado !== undefined) updateData.resultado = entrevista.resultado;
+    // Campos de versionado
+    if (entrevista.version !== undefined) updateData.version = entrevista.version;
+    if (entrevista.fecha_version !== undefined) updateData.fecha_version = entrevista.fecha_version;
+    if (entrevista.codigo !== undefined) updateData.codigo = entrevista.codigo;
+    // Nuevos campos opcionales
+    if (entrevista.motivos_salida_empleo !== undefined) updateData.motivos_salida_empleo = entrevista.motivos_salida_empleo;
+    if (entrevista.licencia_conducir !== undefined) updateData.licencia_conducir = entrevista.licencia_conducir;
+    if (entrevista.reporte_infocorp !== undefined) updateData.reporte_infocorp = entrevista.reporte_infocorp;
+    if (entrevista.condicion_salud_funciones !== undefined) updateData.condicion_salud_funciones = entrevista.condicion_salud_funciones;
+    if (entrevista.restriccion_med_funciones !== undefined) updateData.restriccion_med_funciones = entrevista.restriccion_med_funciones;
 
     const doc = await this.model.findByIdAndUpdate(
       id,

@@ -49,6 +49,18 @@ type EntrevistaLlamada {
   observaciones: String!
   resultado: String!
 
+  # Campos de versionado
+  version: String
+  fecha_version: DateTime
+  codigo: String
+
+  # Nuevos campos opcionales
+  motivos_salida_empleo: String
+  licencia_conducir: String
+  reporte_infocorp: String
+  condicion_salud_funciones: String
+  restriccion_med_funciones: String
+
   # Metadata
   created_at: DateTime!
   updated_at: DateTime!
@@ -100,6 +112,14 @@ input CrearEntrevistaInput {
   entrevistador_nombre: String!
   observaciones: String!
   resultado: String!
+  version: String
+  fecha_version: DateTime
+  codigo: String
+  motivos_salida_empleo: String
+  licencia_conducir: String
+  reporte_infocorp: String
+  condicion_salud_funciones: String
+  restriccion_med_funciones: String
 }
 
 input ActualizarEntrevistaInput {
@@ -126,6 +146,14 @@ input ActualizarEntrevistaInput {
   entrevistador_nombre: String
   observaciones: String
   resultado: String
+  version: String
+  fecha_version: DateTime
+  codigo: String
+  motivos_salida_empleo: String
+  licencia_conducir: String
+  reporte_infocorp: String
+  condicion_salud_funciones: String
+  restriccion_med_funciones: String
 }
 
 input EntrevistaFiltrosInput {

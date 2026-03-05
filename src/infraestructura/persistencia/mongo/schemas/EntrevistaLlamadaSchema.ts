@@ -47,6 +47,18 @@ export interface EntrevistaLlamadaDocument extends Document {
   observaciones: string;
   resultado: string;
 
+  // Campos de versionado
+  version?: string;
+  fecha_version?: string;
+  codigo?: string;
+
+  // Nuevos campos opcionales
+  motivos_salida_empleo?: string;
+  licencia_conducir?: string;
+  reporte_infocorp?: string;
+  condicion_salud_funciones?: string;
+  restriccion_med_funciones?: string;
+
   // Metadata
   created_at: Date;
   updated_at: Date;
@@ -201,6 +213,49 @@ const EntrevistaLlamadaSchema = new Schema<EntrevistaLlamadaDocument>({
     required: true,
     trim: true,
     default: ''
+  },
+
+  // Campos de versionado
+  version: {
+    type: String,
+    required: false,
+    trim: true
+  },
+  fecha_version: {
+    type: Date,
+    required: false
+  },
+  codigo: {
+    type: String,
+    required: false,
+    trim: true
+  },
+
+  // Nuevos campos opcionales
+  motivos_salida_empleo: {
+    type: String,
+    required: false,
+    trim: true
+  },
+  licencia_conducir: {
+    type: String,
+    required: false,
+    trim: true
+  },
+  reporte_infocorp: {
+    type: String,
+    required: false,
+    trim: true
+  },
+  condicion_salud_funciones: {
+    type: String,
+    required: false,
+    trim: true
+  },
+  restriccion_med_funciones: {
+    type: String,
+    required: false,
+    trim: true
   }
 }, {
   collection: 'entrevista_llamada',

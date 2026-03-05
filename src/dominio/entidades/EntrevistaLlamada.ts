@@ -77,6 +77,18 @@ export interface EntrevistaLlamada {
   /** Resultado final de la entrevista */
   resultado: string;
 
+  /** Campos de versionado */
+  version?: string;
+  fecha_version?: Date;
+  codigo?: string;
+
+  /** Nuevos campos opcionales */
+  motivos_salida_empleo?: string;
+  licencia_conducir?: string;
+  reporte_infocorp?: string;
+  condicion_salud_funciones?: string;
+  restriccion_med_funciones?: string;
+
   /** Metadata */
   created_at: Date;
   updated_at: Date;
@@ -111,6 +123,14 @@ export interface CrearEntrevistaInput {
   entrevistador_nombre: string;
   observaciones: string;
   resultado: string;
+  version?: string;
+  fecha_version?: Date;
+  codigo?: string;
+  motivos_salida_empleo?: string;
+  licencia_conducir?: string;
+  reporte_infocorp?: string;
+  condicion_salud_funciones?: string;
+  restriccion_med_funciones?: string;
 }
 
 export interface ActualizarEntrevistaInput {
@@ -138,4 +158,12 @@ export interface ActualizarEntrevistaInput {
   entrevistador_nombre?: string;
   observaciones?: string;
   resultado?: string;
+  version?: string;
+  fecha_version?: Date;
+  codigo?: string;
+  motivos_salida_empleo?: string;
+  licencia_conducir?: string;
+  reporte_infocorp?: string;
+  condicion_salud_funciones?: string;
+  restriccion_med_funciones?: string;
 }
