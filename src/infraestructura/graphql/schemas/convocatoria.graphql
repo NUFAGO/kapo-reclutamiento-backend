@@ -37,6 +37,7 @@ type Convocatoria {
   fecha_creacion: DateTime!
   fecha_actualizacion: DateTime!
   ganadores_ids: [String!]!
+  formularioConfig: FormularioConfig
 }
 
 input RecibirConvocatoriaInput {

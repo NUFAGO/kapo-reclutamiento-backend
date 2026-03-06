@@ -4,11 +4,15 @@
 
 import { IResolvers } from '@graphql-tools/utils';
 import { ConvocatoriaService } from '../../../aplicacion/servicios/ConvocatoriaService';
+import { FormularioConfigService } from '../../../aplicacion/servicios/FormularioConfigService';
 import { RecibirConvocatoriaInput, ConvocatoriaFilters } from '../../../dominio/entidades/Convocatoria';
 import { ErrorHandler } from './ErrorHandler';
 
 export class ConvocatoriaResolver {
-  constructor(private readonly convocatoriaService: ConvocatoriaService) {}
+  constructor(
+    private readonly convocatoriaService: ConvocatoriaService,
+    private readonly formularioConfigService: FormularioConfigService
+  ) {}
 
   getResolvers(): IResolvers {
     return {
@@ -39,6 +43,14 @@ export class ConvocatoriaResolver {
           return await ErrorHandler.handleError(
             async () => await this.convocatoriaService.recibirConvocatoria(args.input),
             'recibirConvocatoria'
+          );
+        },
+      },
+      Convocatoria: {
+        formularioConfig: async (parent: { id: string }) => {
+          return await ErrorHandler.handleError(
+            async () => await this.formularioConfigService.obtenerConfiguracionPorConvocatoria(parent.id),
+            'formularioConfig'
           );
         },
       },

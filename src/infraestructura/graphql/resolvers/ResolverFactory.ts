@@ -163,7 +163,8 @@ export class ResolverFactory {
     // Registrar ConvocatoriaResolver
     container.register('ConvocatoriaResolver', (c) => {
       const convocatoriaService = c.resolve<ConvocatoriaService>('ConvocatoriaService');
-      return new ConvocatoriaResolver(convocatoriaService);
+      const formularioConfigService = c.resolve<FormularioConfigService>('FormularioConfigService');
+      return new ConvocatoriaResolver(convocatoriaService, formularioConfigService);
     }, true);
 
     // Registrar FormularioConfigResolver
