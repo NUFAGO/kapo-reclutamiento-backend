@@ -30,6 +30,7 @@ export interface DebidaDiligencia {
 
   /** Información del formato */
   codigo: string;
+  version?: number;
   fecha_aprobacion?: Date | undefined;
   fecha_evaluacion: Date;
 
@@ -59,6 +60,7 @@ export interface CrearDebidaDiligenciaInput {
   evaluador_id: string;
   nombre_evaluador: string;
   codigo: string;
+  version?: number;
   fecha_aprobacion?: Date;
   fecha_evaluacion: Date;
   criterios: Record<string, CriterioEvaluacion>;
@@ -71,6 +73,7 @@ export interface CrearDebidaDiligenciaInput {
 export interface ActualizarDebidaDiligenciaInput {
   evaluador_id?: string;
   nombre_evaluador?: string;
+  version?: number;
   fecha_aprobacion?: Date;
   fecha_evaluacion?: Date;
   criterios?: Record<string, CriterioEvaluacion>;

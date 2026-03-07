@@ -37,25 +37,52 @@ export class ConvocatoriaMongoRepository implements IConvocatoriaRepository {
 
   async crearOActualizarPorRequerimientoPersonalId(input: RecibirConvocatoriaInput): Promise<Convocatoria> {
     const now = new Date();
-    const payload = {
-      codigo_convocatoria: input.codigo_convocatoria,
-      tipo_requerimiento: input.tipo_requerimiento,
-      estado_convocatoria: 'ACTIVA' as const,
-      cargo_nombre: input.cargo_nombre,
-      categoria_nombre: input.categoria_nombre,
-      especialidad_nombre: input.especialidad_nombre,
-      obra_nombre: input.obra_nombre,
-      empresa_nombre: input.empresa_nombre,
-      vacantes: input.vacantes,
-      prioridad: input.prioridad,
-      requisitos: input.requisitos,
-      cargo_categoria_especialidad_id: input.cargo_categoria_especialidad_id,
-      obra_id: input.obra_id,
-      empresa_id: input.empresa_id,
-      detalle_staff_snapshot: input.detalle_staff_snapshot,
-      fecha_actualizacion: now,
-      ganadores_ids: input.ganadores_ids || [],
-    };
+
+    // Check if document exists
+    const existingDoc = await ConvocatoriaModel.findOne({ requerimiento_personal_id: input.requerimiento_personal_id });
+
+    let payload: any;
+
+    if (existingDoc) {
+      // Updating: only set changed fields, preserve ganadores_ids and estado_convocatoria, and ignore prioridad
+      payload = {
+        codigo_convocatoria: input.codigo_convocatoria,
+        tipo_requerimiento: input.tipo_requerimiento,
+        cargo_nombre: input.cargo_nombre,
+        categoria_nombre: input.categoria_nombre,
+        especialidad_nombre: input.especialidad_nombre,
+        obra_nombre: input.obra_nombre,
+        empresa_nombre: input.empresa_nombre,
+        vacantes: input.vacantes,
+        requisitos: input.requisitos,
+        cargo_categoria_especialidad_id: input.cargo_categoria_especialidad_id,
+        obra_id: input.obra_id,
+        empresa_id: input.empresa_id,
+        detalle_staff_snapshot: input.detalle_staff_snapshot,
+        fecha_actualizacion: now,
+      };
+    } else {
+      // Creating: set all fields including defaults
+      payload = {
+        codigo_convocatoria: input.codigo_convocatoria,
+        tipo_requerimiento: input.tipo_requerimiento,
+        estado_convocatoria: 'ACTIVA' as const,
+        cargo_nombre: input.cargo_nombre,
+        categoria_nombre: input.categoria_nombre,
+        especialidad_nombre: input.especialidad_nombre,
+        obra_nombre: input.obra_nombre,
+        empresa_nombre: input.empresa_nombre,
+        vacantes: input.vacantes,
+        prioridad: input.prioridad,
+        requisitos: input.requisitos,
+        cargo_categoria_especialidad_id: input.cargo_categoria_especialidad_id,
+        obra_id: input.obra_id,
+        empresa_id: input.empresa_id,
+        detalle_staff_snapshot: input.detalle_staff_snapshot,
+        fecha_actualizacion: now,
+        ganadores_ids: input.ganadores_ids || [],
+      };
+    }
 
     const doc = await ConvocatoriaModel.findOneAndUpdate(
       { requerimiento_personal_id: input.requerimiento_personal_id },

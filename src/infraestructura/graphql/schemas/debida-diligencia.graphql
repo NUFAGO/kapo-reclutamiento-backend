@@ -9,6 +9,7 @@ type DebidaDiligencia {
   evaluador_id: ID!
   nombre_evaluador: String!
   codigo: String!
+  version: Int
   fecha_aprobacion: DateTime
   fecha_evaluacion: DateTime!
   criterios: JSON!
@@ -52,6 +53,7 @@ input CrearDebidaDiligenciaInput {
   evaluador_id: ID!
   nombre_evaluador: String!
   codigo: String!
+  version: Int
   fecha_aprobacion: DateTime
   fecha_evaluacion: DateTime!
   criterios: JSON!
@@ -64,6 +66,7 @@ input CrearDebidaDiligenciaInput {
 input ActualizarDebidaDiligenciaInput {
   evaluador_id: ID
   nombre_evaluador: String
+  version: Int
   fecha_aprobacion: DateTime
   fecha_evaluacion: DateTime
   criterios: JSON

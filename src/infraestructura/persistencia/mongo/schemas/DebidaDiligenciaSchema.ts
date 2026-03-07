@@ -7,6 +7,7 @@ export interface DebidaDiligenciaDocument extends Document {
   evaluador_id: mongoose.Types.ObjectId;
   nombre_evaluador: string;
   codigo: string;
+  version?: number;
   fecha_aprobacion?: Date | undefined;
   fecha_evaluacion: Date;
   criterios: Record<string, { ponderacion: number; respuesta: string; puntaje: number }>;
@@ -17,12 +18,6 @@ export interface DebidaDiligenciaDocument extends Document {
   created_at: Date;
   updated_at: Date;
 }
-
-const CriterioSchema = new Schema({
-  ponderacion: { type: Number, required: true },
-  respuesta: { type: String, enum: ['SI', 'NO', 'NA'], required: true },
-  puntaje: { type: Number, required: true }
-}, { _id: false });
 
 const ControlSchema = new Schema({
   criterio: { type: String, required: true },
@@ -61,6 +56,12 @@ const DebidaDiligenciaSchema = new Schema<DebidaDiligenciaDocument>({
     trim: true
   },
 
+  version: {
+    type: Number,
+    required: false,
+    default: 1
+  },
+
   fecha_aprobacion: {
     type: Date,
     required: false
@@ -72,8 +73,7 @@ const DebidaDiligenciaSchema = new Schema<DebidaDiligenciaDocument>({
   },
 
   criterios: {
-    type: Map,
-    of: CriterioSchema,
+    type: Schema.Types.Mixed,
     required: true
   },
 
