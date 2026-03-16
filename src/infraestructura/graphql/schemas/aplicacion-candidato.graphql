@@ -48,8 +48,8 @@ type AplicacionCandidato {
   estadoKanban: EstadoKanban!
 
   # Información específica
-  aniosExperienciaPuesto: Int!
-  aniosExperienciaGeneral: Int
+  aniosExperienciaPuesto: Float!
+  aniosExperienciaGeneral: Float
   medioConvocatoria: String
   pretensionEconomica: Float!
   curriculumUrl: String!
@@ -96,8 +96,8 @@ enum EstadoKanban {
 }
 
 input CamposEspecificosInput {
-  aniosExperienciaPuesto: Int!
-  aniosExperienciaGeneral: Int
+  aniosExperienciaPuesto: Float!
+  aniosExperienciaGeneral: Float
   medioConvocatoria: String
   pretensionEconomica: Float!
   curriculumUrl: String!
@@ -124,8 +124,8 @@ input CandidatoInput {
 
 input ActualizarAplicacionInput {
   puestoPostula: String
-  aniosExperienciaPuesto: Int
-  aniosExperienciaGeneral: Int
+  aniosExperienciaPuesto: Float
+  aniosExperienciaGeneral: Float
   medioConvocatoria: String
   pretensionEconomica: Float
   curriculumUrl: String
