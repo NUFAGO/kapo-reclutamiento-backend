@@ -1,0 +1,35 @@
+# ============================================================================
+# Comentarios libres por aplicación (Kanban)
+# ============================================================================
+
+type ComentarioAplicacion {
+  id: ID!
+  aplicacionId: ID!
+  candidatoId: ID!
+  texto: String!
+  creadoPor: ID!
+  creadoPorNombre: String!
+  estadoKanbanContext: EstadoKanban
+  created_at: DateTime!
+}
+
+type ComentariosAplicacionResult {
+  comentarios: [ComentarioAplicacion!]!
+  total: Int!
+}
+
+input CrearComentarioAplicacionInput {
+  aplicacionId: ID!
+  texto: String!
+  creadoPor: ID!
+  creadoPorNombre: String!
+  estadoKanbanContext: EstadoKanban
+}
+
+extend type Query {
+  comentariosPorAplicacion(aplicacionId: ID!, limit: Int, offset: Int): ComentariosAplicacionResult!
+}
+
+extend type Mutation {
+  crearComentarioAplicacion(input: CrearComentarioAplicacionInput!): ComentarioAplicacion!
+}

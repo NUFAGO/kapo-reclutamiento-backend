@@ -15,6 +15,7 @@ import { EntrevistaLlamadaResolver } from './EntrevistaLlamadaResolver';
 import { EntrevistaRegularResolver } from './EntrevistaRegularResolver';
 import { DebidaDiligenciaResolver } from './DebidaDiligenciaResolver';
 import { HistorialCandidatoResolver } from './HistorialCandidatoResolver';
+import { ComentarioAplicacionResolver } from './ComentarioAplicacionResolver';
 import { ReferenciaResolver } from './ReferenciaResolver';
 import { PersonalResolver } from './PersonalResolver';
 import { UploadResolver } from './UploadResolver';
@@ -31,6 +32,7 @@ import { EntrevistaLlamadaService } from '../../../aplicacion/servicios/Entrevis
 import { EntrevistaRegularService } from '../../../aplicacion/servicios/EntrevistaRegularService';
 import { DebidaDiligenciaService } from '../../../aplicacion/servicios/DebidaDiligenciaService';
 import { HistorialCandidatoService } from '../../../aplicacion/servicios/HistorialCandidatoService';
+import { ComentarioAplicacionService } from '../../../aplicacion/servicios/ComentarioAplicacionService';
 import { ReferenciaService } from '../../../aplicacion/servicios/ReferenciaService';
 import { PersonalService } from '../../../aplicacion/servicios/PersonalService';
 import { ComunicacionEntradaService } from '../../../aplicacion/servicios/ComunicacionEntradaService';
@@ -49,6 +51,7 @@ import { EntrevistaLlamadaMongoRepository } from '../../persistencia/mongo/Entre
 import { EntrevistaRegularMongoRepository } from '../../persistencia/mongo/EntrevistaRegularMongoRepository';
 import { DebidaDiligenciaMongoRepository } from '../../persistencia/mongo/DebidaDiligenciaMongoRepository';
 import { HistorialCandidatoMongoRepository } from '../../persistencia/mongo/HistorialCandidatoMongoRepository';
+import { ComentarioAplicacionMongoRepository } from '../../persistencia/mongo/ComentarioAplicacionMongoRepository';
 import { ReferenciaMongoRepository } from '../../persistencia/mongo/ReferenciaMongoRepository';
 import { ComunicacionEntradaMongoRepository } from '../../persistencia/mongo/ComunicacionEntradaMongoRepository';
 
@@ -117,6 +120,9 @@ export class ResolverFactory {
 
     // Registrar HistorialCandidatoMongoRepository
     container.register('HistorialCandidatoMongoRepository', () => new HistorialCandidatoMongoRepository(), true);
+
+    // Registrar ComentarioAplicacionMongoRepository
+    container.register('ComentarioAplicacionMongoRepository', () => new ComentarioAplicacionMongoRepository(), true);
 
     // Registrar ReferenciaMongoRepository
     container.register('ReferenciaMongoRepository', () => new ReferenciaMongoRepository(), true);
@@ -217,6 +223,13 @@ export class ResolverFactory {
       return new HistorialCandidatoService(historialRepo, aplicacionRepo);
     }, true);
 
+    // Registrar ComentarioAplicacionService
+    container.register('ComentarioAplicacionService', (c) => {
+      const comentarioRepo = c.resolve<ComentarioAplicacionMongoRepository>('ComentarioAplicacionMongoRepository');
+      const aplicacionRepo = c.resolve<AplicacionCandidatoMongoRepository>('AplicacionCandidatoMongoRepository');
+      return new ComentarioAplicacionService(comentarioRepo, aplicacionRepo);
+    }, true);
+
     // Registrar ReferenciaService
     container.register('ReferenciaService', (c) => {
       const referenciaRepo = c.resolve<ReferenciaMongoRepository>('ReferenciaMongoRepository');
@@ -269,6 +282,12 @@ export class ResolverFactory {
     container.register('HistorialCandidatoResolver', (c) => {
       const historialService = c.resolve<HistorialCandidatoService>('HistorialCandidatoService');
       return new HistorialCandidatoResolver(historialService);
+    }, true);
+
+    // Registrar ComentarioAplicacionResolver
+    container.register('ComentarioAplicacionResolver', (c) => {
+      const svc = c.resolve<ComentarioAplicacionService>('ComentarioAplicacionService');
+      return new ComentarioAplicacionResolver(svc);
     }, true);
 
     // Registrar ReferenciaResolver
@@ -359,6 +378,11 @@ export class ResolverFactory {
       const historialCandidatoResolver = container.resolve<HistorialCandidatoResolver>('HistorialCandidatoResolver');
       resolvers.push(historialCandidatoResolver.getResolvers());
       logger.debug('Resolver configurado: historial-candidato');
+
+      // Crear ComentarioAplicacionResolver
+      const comentarioAplicacionResolver = container.resolve<ComentarioAplicacionResolver>('ComentarioAplicacionResolver');
+      resolvers.push(comentarioAplicacionResolver.getResolvers());
+      logger.debug('Resolver configurado: comentario-aplicacion');
 
       // Crear ReferenciaResolver
       const referenciaResolver = container.resolve<ReferenciaResolver>('ReferenciaResolver');

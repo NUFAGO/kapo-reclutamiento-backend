@@ -43,7 +43,9 @@ export class ConfigService {
       'GOOGLE_CLOUD_CREDENTIALS_JSON',
       'INACONS_BACKEND_URL',
       'PERSONAL_BACKEND_URL',
-      'CORS_ORIGINS'
+      'CORS_ORIGINS',
+      /** Opcional: si está definido, recibirConvocatoria exige el mismo valor en X-Recibir-Convocatoria-Secret */
+      'RECIBIR_CONVOCATORIA_SECRET'
     ];
 
     envVars.forEach(envVar => {

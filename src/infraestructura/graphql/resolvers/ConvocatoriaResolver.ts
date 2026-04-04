@@ -3,6 +3,7 @@
 // ============================================================================
 
 import { IResolvers } from '@graphql-tools/utils';
+import { GraphQLError } from 'graphql';
 import { ConvocatoriaService } from '../../../aplicacion/servicios/ConvocatoriaService';
 import { FormularioConfigService } from '../../../aplicacion/servicios/FormularioConfigService';
 import { RecibirConvocatoriaInput, ConvocatoriaFilters } from '../../../dominio/entidades/Convocatoria';
@@ -39,7 +40,26 @@ export class ConvocatoriaResolver {
         },
       },
       Mutation: {
-        recibirConvocatoria: async (_: unknown, args: { input: RecibirConvocatoriaInput }) => {
+        recibirConvocatoria: async (
+          _: unknown,
+          args: { input: RecibirConvocatoriaInput },
+          context: { req?: { headers?: Record<string, string | string[] | undefined> } }
+        ) => {
+          const secret = process.env['RECIBIR_CONVOCATORIA_SECRET']?.trim();
+          if (secret) {
+            const headers = context?.req?.headers ?? {};
+            const headerVal = (name: string): string | undefined => {
+              const v = headers[name.toLowerCase()];
+              return Array.isArray(v) ? v[0] : v;
+            };
+            const sent =
+              headerVal('x-recibir-convocatoria-secret') ?? headerVal('x-recibir-convocatoria-key');
+            if (sent !== secret) {
+              throw new GraphQLError('No autorizado: sincronización de convocatoria (MS Personal)', {
+                extensions: { code: 'FORBIDDEN' },
+              });
+            }
+          }
           return await ErrorHandler.handleError(
             async () => await this.convocatoriaService.recibirConvocatoria(args.input),
             'recibirConvocatoria'
