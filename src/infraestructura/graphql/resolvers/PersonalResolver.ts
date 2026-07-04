@@ -8,6 +8,7 @@ import {
   PersonalFilterInput,
   PersonalReferenciasInput
 } from '../../../dominio/entidades/Personal';
+import { EmpleadoCHFiltro } from '../../../dominio/repositorios/IPersonalRepository';
 import { ErrorHandler } from './ErrorHandler';
 
 /**
@@ -22,6 +23,14 @@ export class PersonalResolver {
   getResolvers(): IResolvers {
     return {
       Query: {
+        listEmpleadoCH: async (_: unknown, args: { filter?: EmpleadoCHFiltro }) => {
+          return await ErrorHandler.handleError(
+            async () => await this.personalService.listEmpleadoCH(args.filter),
+            'listEmpleadoCH',
+            { filter: args.filter }
+          );
+        },
+
         empleadosPaginados: async (
           _: unknown,
           args: {

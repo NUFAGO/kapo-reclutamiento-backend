@@ -43,9 +43,19 @@ export class ConfigService {
       'GOOGLE_CLOUD_CREDENTIALS_JSON',
       'INACONS_BACKEND_URL',
       'PERSONAL_BACKEND_URL',
+      'TAREO_BACKEND_URL',
       'CORS_ORIGINS',
       /** Opcional: si está definido, recibirConvocatoria exige el mismo valor en X-Recibir-Convocatoria-Secret */
-      'RECIBIR_CONVOCATORIA_SECRET'
+      'RECIBIR_CONVOCATORIA_SECRET',
+      // --- Integración kapo-autentificacion (IAM central) + gateway ---
+      'SISTEMA_CODIGO',
+      'AUTH_BACKEND_URL',
+      'INTERNAL_GATEWAY_SECRET',
+      'REQUIRE_GATEWAY_SECRET',
+      // --- Malla interna (este-oeste) ---
+      'INTERNAL_GATEWAY_URL',
+      'INTERNAL_SERVICE_TOKEN',
+      'INTERNAL_UPSTREAM_SECRET'
     ];
 
     envVars.forEach(envVar => {
@@ -211,6 +221,49 @@ export class ConfigService {
         'https://kapo-tareo-bakend-production.up.railway.app/graphql'
       )
     };
+  }
+
+  // ==========================================================================
+  // Integración con kapo-autentificacion (IAM central) + gateway edge
+  // ==========================================================================
+
+  /** Código de ESTE sistema en el IAM (claim `sistema`, navegación, shield). */
+  getSistemaCodigo(): string {
+    return this.getOrDefault('SISTEMA_CODIGO', 'reclutamiento');
+  }
+
+  /** URL directa a kapo-autentificacion (solo para enriquecer usuarios, M2M). */
+  getAuthBackendUrl(): string {
+    return this.getOrDefault('AUTH_BACKEND_URL', 'http://localhost:8079/graphql');
+  }
+
+  /** Secreto que inyecta el gateway edge en X-Gateway-Secret. */
+  getInternalGatewaySecret(): string {
+    return this.getOrDefault('INTERNAL_GATEWAY_SECRET', '');
+  }
+
+  /** true → exige X-Gateway-Secret válido (bloquea acceso directo). Prod: true. */
+  requireGatewaySecret(): boolean {
+    return this.getBoolean('REQUIRE_GATEWAY_SECRET', false);
+  }
+
+  // ==========================================================================
+  // Malla interna (este-oeste, M2M vía kapo-gateway-internal)
+  // ==========================================================================
+
+  /** URL del gateway interno (para consumir otros MS de la malla, si aplica). */
+  getInternalGatewayUrl(): string {
+    return this.getOrDefault('INTERNAL_GATEWAY_URL', 'http://localhost:8091');
+  }
+
+  /** JWT de servicio propio (sub=service:reclutamiento) para llamar por la malla. */
+  getInternalServiceToken(): string {
+    return this.getOrDefault('INTERNAL_SERVICE_TOKEN', '');
+  }
+
+  /** Secreto que el gateway interno inyecta en X-Internal-Gateway-Secret (target + M2M a auth). */
+  getInternalUpstreamSecret(): string {
+    return this.getOrDefault('INTERNAL_UPSTREAM_SECRET', '');
   }
 
   /**

@@ -141,8 +141,32 @@ input PersonalReferenciasInput {
   conEmpleabilidadActualMovilidad: Boolean
 }
 
+# --- Picker liviano de empleados (proxy a listEmpleadoCH del MS Personal) ---
+input EmpleadoCHFilterInput {
+  dni: String
+  nombres: String
+  ap_paterno: String
+  estado: Boolean
+}
+
+type EmpleadoCHBasico {
+  id: ID!
+  dni: String
+  nombres: String
+  ap_paterno: String
+  ap_materno: String
+}
+
+type EmpleadoCHListResult {
+  empleados: [EmpleadoCHBasico!]!
+  total: Int!
+}
+
 # Consultas
 extend type Query {
+  # Listado liviano de empleados para el picker (proxy M2M a listEmpleadoCH de Personal)
+  listEmpleadoCH(filter: EmpleadoCHFilterInput): EmpleadoCHListResult!
+
   # Obtener empleados paginados desde el sistema PERSONAL
   empleadosPaginados(
     page: Int = 1

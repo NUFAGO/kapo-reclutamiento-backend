@@ -5,7 +5,6 @@
 import { scalarResolvers } from './scalars';
 
 // Importar resolvers de autenticación
-import { AuthResolver } from './AuthResolver';
 import { UsuarioResolver } from './UsuarioResolver';
 import { ConvocatoriaResolver } from './ConvocatoriaResolver';
 import { FormularioConfigResolver } from './FormularioConfigResolver';
@@ -22,7 +21,6 @@ import { UploadResolver } from './UploadResolver';
 import { ComunicacionEntradaResolver } from './ComunicacionEntradaResolver';
 
 // Importar servicios
-import { AuthService } from '../../../aplicacion/servicios/AuthService';
 import { UsuarioService } from '../../../aplicacion/servicios/UsuarioService';
 import { ConvocatoriaService } from '../../../aplicacion/servicios/ConvocatoriaService';
 import { FormularioConfigService } from '../../../aplicacion/servicios/FormularioConfigService';
@@ -130,22 +128,10 @@ export class ResolverFactory {
     // Registrar ComunicacionEntradaMongoRepository
     container.register('ComunicacionEntradaMongoRepository', () => new ComunicacionEntradaMongoRepository(), true);
 
-    // Registrar AuthService
-    container.register('AuthService', (c) => {
-      const httpAuthRepo = c.resolve<HttpAuthRepository>('HttpAuthRepository');
-      return new AuthService(httpAuthRepo);
-    }, true);
-
     // Registrar UsuarioService
     container.register('UsuarioService', (c) => {
       const usuarioRepo = c.resolve<HttpAuthRepository>('HttpAuthRepository');
       return new UsuarioService(usuarioRepo);
-    }, true);
-
-    // Registrar AuthResolver
-    container.register('AuthResolver', (c) => {
-      const authService = c.resolve<AuthService>('AuthService');
-      return new AuthResolver(authService);
     }, true);
 
     // Registrar UsuarioResolver
@@ -329,11 +315,6 @@ export class ResolverFactory {
     const container = this.getContainer();
 
     try {
-      // Crear AuthResolver
-      const authResolver = container.resolve<AuthResolver>('AuthResolver');
-      resolvers.push(authResolver.getResolvers());
-      logger.debug('Resolver configurado: auth');
-
       // Crear UsuarioResolver
       const usuarioResolver = container.resolve<UsuarioResolver>('UsuarioResolver');
       resolvers.push(usuarioResolver.getResolvers());

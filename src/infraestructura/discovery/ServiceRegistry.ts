@@ -57,11 +57,14 @@ export class SimpleServiceRegistry implements ServiceRegistry {
   private initializeFromConfig(): void {
     try {
       const urls = this.configService.getExternalServiceUrls();
-      
+
       // Registrar servicios conocidos con nombres estándar para base de datos
       this.services.set('inacons-backend', urls.inaconsBackendUrl);
       this.services.set('personal-backend', urls.personalBackendUrl);
       this.services.set('tareo-backend', urls.tareoBackendUrl);
+      // IAM central (kapo-autentificacion) — identidad/usuarios/roles.
+      // Se consume M2M directo con X-Internal-Gateway-Secret (ver HttpAuthRepository).
+      this.services.set('auth-service', this.configService.getAuthBackendUrl());
       
       logger.info('ServiceRegistry inicializado desde configuración', {
         servicesCount: this.services.size

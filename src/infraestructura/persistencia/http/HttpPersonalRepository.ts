@@ -1,4 +1,4 @@
-import { IPersonalRepository, CrearEmpleadoInput, ActualizarEmpleadoInput } from '../../../dominio/repositorios/IPersonalRepository';
+import { IPersonalRepository, CrearEmpleadoInput, ActualizarEmpleadoInput, EmpleadoCHFiltro, EmpleadoCHListado } from '../../../dominio/repositorios/IPersonalRepository';
 import { Personal, PersonalFilterInput, PersonalReferenciasInput, PersonalPaginadoResult } from '../../../dominio/entidades/Personal';
 import { BaseHttpRepository } from './BaseHttpRepository';
 import { GraphQLClient } from '../../http/GraphQLClient';
@@ -199,6 +199,33 @@ export class HttpPersonalRepository extends BaseHttpRepository<Personal> impleme
       });
       throw error;
     }
+  }
+
+  /**
+   * Proxy liviano a listEmpleadoCH del MS Personal (para el picker de empleados).
+   * Va por el gateway interno (M2M) igual que empleadosPaginados; proyección mínima.
+   */
+  async listEmpleadoCH(filter?: EmpleadoCHFiltro): Promise<EmpleadoCHListado> {
+    const query = `
+      query ListEmpleadoCH($filter: EmpleadoCHFilterInput) {
+        listEmpleadoCH(filter: $filter) {
+          empleados {
+            id
+            dni
+            nombres
+            ap_paterno
+            ap_materno
+          }
+          total
+        }
+      }
+    `;
+    const variables: any = {};
+    if (filter && Object.keys(filter).some((k) => (filter as any)[k] !== undefined)) {
+      variables.filter = filter;
+    }
+    const result = await this.graphqlRequest(query, variables, 'personal-backend');
+    return result?.listEmpleadoCH ?? { empleados: [], total: 0 };
   }
 
   /**

@@ -1,7 +1,14 @@
 import { GraphQLClient } from '../../http/GraphQLClient';
 import { SimpleServiceRegistry } from '../../discovery/ServiceRegistry';
+import { ConfigService } from '../../config/ConfigService';
 import { PaginationInput, PaginationResult, FilterInput, SearchInput } from '../../../dominio/valueObjects/Pagination';
 import { logger } from '../../logging';
+
+// Destinos que se consumen por el kapo-gateway-internal (este-oeste, M2M).
+// 1 línea por MS target. NO mapear serviceNames usados para llamadas directas.
+const INTERNAL_GATEWAY_PATHS: Record<string, string> = {
+  'personal-backend': '/personal/graphql',
+};
 
 /**
  * Repositorio base HTTP que implementa la lógica común de inicialización del cliente GraphQL
@@ -57,13 +64,40 @@ export abstract class BaseHttpRepository<T> {
     serviceName: string = '',
     fallbackServiceName: string = 'inacons-backend'
   ): Promise<any> {
-    const client = await this.getClient(serviceName, fallbackServiceName);
     // Solo incluir variables si están definidas y no están vacías
     const request: any = { query };
     if (variables && Object.keys(variables).length > 0) {
       request.variables = variables;
     }
+
+    // Ruteo este-oeste: si el serviceName está mapeado y hay token de servicio,
+    // va por el kapo-gateway-internal con Authorization: Bearer <JWT servicio>.
+    // El gateway inyecta el X-Internal-Gateway-Secret al target (Personal confía).
+    const internal = BaseHttpRepository.resolveInternalRoute(serviceName);
+    if (internal) {
+      const internalClient = new GraphQLClient(internal.url, {
+        headers: { Authorization: `Bearer ${internal.token}` },
+        // El salto extra por el gateway + queries pesadas (p.ej. empleadosPaginados
+        // con muchos anidados) supera el default de 5s. Alineado al PROXY_TIMEOUT_MS
+        // del kapo-gateway-internal (30s).
+        timeout: 30000,
+      });
+      return internalClient.request(request);
+    }
+
+    const client = await this.getClient(serviceName, fallbackServiceName);
     return client.request(request);
+  }
+
+  /** Resuelve la ruta interna (gateway :8091) para un serviceName mapeado. */
+  private static resolveInternalRoute(serviceName: string): { url: string; token: string } | null {
+    const path = INTERNAL_GATEWAY_PATHS[serviceName];
+    if (!path) return null;
+    const config = ConfigService.getInstance();
+    const token = config.getInternalServiceToken();
+    if (!token) return null; // sin token no rutea (fallback: getClient directo)
+    const base = config.getInternalGatewayUrl().replace(/\/+$/, '');
+    return { url: `${base}${path}`, token };
   }
 
   /**

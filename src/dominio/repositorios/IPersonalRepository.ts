@@ -26,6 +26,27 @@ export interface ActualizarEmpleadoInput {
   requerimiento_asignado_codigo?: string;
 }
 
+/** Proyección liviana para el picker de empleados (listEmpleadoCH). */
+export interface EmpleadoCHBasico {
+  id: string;
+  dni: string;
+  nombres: string;
+  ap_paterno: string;
+  ap_materno: string;
+}
+
+export interface EmpleadoCHFiltro {
+  dni?: string;
+  nombres?: string;
+  ap_paterno?: string;
+  estado?: boolean;
+}
+
+export interface EmpleadoCHListado {
+  empleados: EmpleadoCHBasico[];
+  total: number;
+}
+
 export interface IPersonalRepository extends IBaseRepository<Personal> {
   /**
    * Obtener empleados paginados desde el sistema PERSONAL
@@ -46,6 +67,11 @@ export interface IPersonalRepository extends IBaseRepository<Personal> {
    * Buscar empleados por texto desde el sistema PERSONAL
    */
   buscarEmpleados(search?: string, page?: number, limit?: number): Promise<PersonalPaginadoResult>;
+
+  /**
+   * Listado liviano de empleados (proxy a listEmpleadoCH del MS Personal) para el picker.
+   */
+  listEmpleadoCH(filter?: EmpleadoCHFiltro): Promise<EmpleadoCHListado>;
 
   /**
    * Obtener empleados disponibles desde el sistema PERSONAL

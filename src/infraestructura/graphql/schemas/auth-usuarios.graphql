@@ -28,14 +28,6 @@ type Permission {
   eliminar: Boolean!
 }
 
-type LoginResponse {
-  id: ID
-  token: String
-  usuario: String
-  nombresA: String
-  role: Role
-}
-
 input MenuPermissionInput {
   menuID: ID!
   permissions: PermissionInput!
@@ -179,9 +171,6 @@ extend type Query {
 # ============================================================================
 
 extend type Mutation {
-  # Auth
-  login(usuario: String, contrasenna: String): LoginResponse
-  
   # Roles
   addRole(nombre: String!, descripcion: String!, menusPermissions: [MenuPermissionInput!]!): Role!
   updateRole(id: ID!, nombre: String!, descripcion: String!, menusPermissions: [MenuPermissionInput!]!): Role!

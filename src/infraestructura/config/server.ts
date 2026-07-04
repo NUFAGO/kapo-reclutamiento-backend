@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { makeExecutableSchema } from '@graphql-tools/schema';
+import { applyMiddleware } from 'graphql-middleware';
 import cors from 'cors';
 import http from 'http';
 import { logger } from '../logging';
@@ -9,6 +10,9 @@ import { HealthCheckService } from '../health/HealthCheckService';
 import { DatabaseHealthCheck } from '../health/DatabaseHealthCheck';
 
 import { ConfigService } from './ConfigService';
+import { buildPermissions } from '../graphql/auth/permissions';
+import { decodificarClaims } from '../auth/tokenContext';
+import { createGatewayValidationMiddleware } from '../auth/gatewayValidationMiddleware';
 
 const configService = ConfigService.getInstance();
 
@@ -106,10 +110,44 @@ export const createServer = (resolvers: any, typeDefs: any): { app: Application;
   httpServer.keepAliveTimeout = 120000;
   httpServer.headersTimeout = 125000;
 
+  // Bloqueo de acceso directo: solo tráfico del gateway cuando
+  // REQUIRE_GATEWAY_SECRET=true (dev: false). Montado antes de Apollo.
+  app.use('/graphql', createGatewayValidationMiddleware(configService));
+
+  const baseSchema = makeExecutableSchema({ typeDefs, resolvers });
+  // applyMiddleware devuelve GraphQLSchemaWithFragmentReplacements (tipo de
+  // graphql-middleware); es un GraphQLSchema válido en runtime. El cast evita el
+  // choque de la marca privada `_queryType` entre las .d.ts de ambos paquetes.
+  const schema = applyMiddleware(baseSchema, buildPermissions(configService));
+
   const apolloServer = new ApolloServer({
-    schema: makeExecutableSchema({ typeDefs, resolvers }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: schema as any,
     introspection: true,
-    context: ({ req }) => ({ req, token: req.headers.authorization?.split(" ")[1] }),
+    context: async ({ req }) => {
+      const token = req.headers.authorization?.split(' ')[1];
+
+      let usuarioAuth = null;
+      let authMotivo: string | undefined;
+
+      // Llamada M2M este-oeste: el gateway interno inyecta X-Internal-Gateway-Secret.
+      const upstreamSecret = configService.getInternalUpstreamSecret();
+      const recibido = req.headers['x-internal-gateway-secret'];
+      const internalTrusted =
+        !!upstreamSecret &&
+        typeof recibido === 'string' &&
+        recibido === upstreamSecret;
+
+      // Este MS NO valida el token (firma/expiración/sesión = trabajo del
+      // gateway). Solo DECODIFICA los claims para contexto de resolvers.
+      // Cuando es interno (JWT de servicio, no de usuario) se omite el parseo.
+      if (!internalTrusted && token) {
+        usuarioAuth = decodificarClaims(token);
+        if (!usuarioAuth) authMotivo = 'TOKEN_INVALIDO';
+      }
+
+      return { req, token, usuarioAuth, authMotivo, internalTrusted };
+    },
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
     persistedQueries: false,
     formatError: (error) => {

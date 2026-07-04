@@ -8,7 +8,7 @@ import {
   PersonalReferenciasInput,
   PersonalPaginadoResult
 } from '../../dominio/entidades/Personal';
-import { IPersonalRepository, CrearEmpleadoInput, ActualizarEmpleadoInput } from '../../dominio/repositorios/IPersonalRepository';
+import { IPersonalRepository, CrearEmpleadoInput, ActualizarEmpleadoInput, EmpleadoCHFiltro, EmpleadoCHListado } from '../../dominio/repositorios/IPersonalRepository';
 
 /**
  * Servicio para consumir el endpoint empleadosPaginados del sistema PERSONAL/Personal
@@ -44,6 +44,13 @@ export class PersonalService {
    */
   async buscarEmpleados(search?: string, page: number = 1, limit: number = 10): Promise<PersonalPaginadoResult> {
     return await this.personalRepository.buscarEmpleados(search, page, limit);
+  }
+
+  /**
+   * Listado liviano para el picker de empleados (proxy a listEmpleadoCH de Personal).
+   */
+  async listEmpleadoCH(filter?: EmpleadoCHFiltro): Promise<EmpleadoCHListado> {
+    return await this.personalRepository.listEmpleadoCH(filter);
   }
 
   /**
