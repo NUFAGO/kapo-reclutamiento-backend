@@ -101,6 +101,10 @@ export function buildPermissions(config: ConfigService) {
         // (login/refreshToken ya no existen aquí — identidad directa a auth vía gateway)
         // Postulación pública del candidato (sin sesión).
         crearAplicacion: allow,
+        // Subida de CV/foto del candidato en el flujo público (public)/postular,
+        // que ocurre ANTES de crearAplicacion. Mismo mutation que el dashboard.
+        subirArchivo: allow,
+        subirMultiplesArchivos: allow,
         // Ingesta M2M de convocatorias: protegida por su propio X-Recibir-Convocatoria-Secret
         // en el resolver, no por sesión de usuario.
         recibirConvocatoria: allow,
