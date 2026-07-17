@@ -363,6 +363,19 @@ export class FileUploadService {
     };
   }
 
+  static get COMENTARIOS_CONFIG(): FileUploadConfig {
+    return {
+      folder: "kaporeclutamiento/comentarios",
+      maxFileSize: 10 * 1024 * 1024, // 10MB
+      allowedMimeTypes: [
+        "image/jpeg", "image/png", "image/webp", "image/gif",
+        "application/pdf"
+      ],
+      optimizeImages: true,
+      generateUniqueNames: true
+    };
+  }
+
   static get IMAGENES_CONFIG(): FileUploadConfig {
     return {
       folder: "kaporeclutamiento/imagenes-generales",

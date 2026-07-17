@@ -7,6 +7,7 @@ type ComentarioAplicacion {
   aplicacionId: ID!
   candidatoId: ID!
   texto: String!
+  archivos: [String!]!
   creadoPor: ID!
   creadoPorNombre: String!
   estadoKanbanContext: EstadoKanban
@@ -21,6 +22,7 @@ type ComentariosAplicacionResult {
 input CrearComentarioAplicacionInput {
   aplicacionId: ID!
   texto: String!
+  archivos: [String!]
   creadoPor: ID!
   creadoPorNombre: String!
   estadoKanbanContext: EstadoKanban

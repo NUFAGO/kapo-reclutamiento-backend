@@ -10,12 +10,14 @@ export enum EstadoKanban {
   POR_LLAMAR = 'POR_LLAMAR',
   ENTREVISTA_PREVIA = 'ENTREVISTA_PREVIA',
 
-  // 3. Programación de entrevistas
+  // 3. Referencias
+  REFERENCIAS = 'REFERENCIAS',
+
+  // 4. Programación de entrevistas
   PROGRAMAR_1RA_ENTREVISTA = 'PROGRAMAR_1RA_ENTREVISTA',
   PROGRAMAR_2DA_ENTREVISTA = 'PROGRAMAR_2DA_ENTREVISTA',
 
-  // 4. Evaluación profunda
-  REFERENCIAS = 'REFERENCIAS',
+  // 5. Evaluación profunda
   EVALUACION_ANTISOBORNO = 'EVALUACION_ANTISOBORNO',
 
   // 5. Aprobaciones finales
@@ -37,17 +39,17 @@ export function esTransicionValida(estadoActual: EstadoKanban, estadoNuevo: Esta
   const transicionesValidas: Partial<Record<EstadoKanban, readonly EstadoKanban[]>> = {
     [EstadoKanban.CVS_RECIBIDOS]: [EstadoKanban.POR_LLAMAR, EstadoKanban.DESCARTADO],
     [EstadoKanban.POR_LLAMAR]: [EstadoKanban.ENTREVISTA_PREVIA, EstadoKanban.DESCARTADO],
-    [EstadoKanban.ENTREVISTA_PREVIA]: [EstadoKanban.PROGRAMAR_1RA_ENTREVISTA, EstadoKanban.DESCARTADO, EstadoKanban.POSIBLES_CANDIDATOS],
-    [EstadoKanban.PROGRAMAR_1RA_ENTREVISTA]: [EstadoKanban.PROGRAMAR_2DA_ENTREVISTA, EstadoKanban.DESCARTADO],
-    [EstadoKanban.PROGRAMAR_2DA_ENTREVISTA]: [EstadoKanban.REFERENCIAS, EstadoKanban.POSIBLES_CANDIDATOS, EstadoKanban.DESCARTADO],
-    [EstadoKanban.REFERENCIAS]: [EstadoKanban.EVALUACION_ANTISOBORNO, EstadoKanban.POSIBLES_CANDIDATOS, EstadoKanban.DESCARTADO],
+    [EstadoKanban.ENTREVISTA_PREVIA]: [EstadoKanban.REFERENCIAS, EstadoKanban.DESCARTADO],
+    [EstadoKanban.REFERENCIAS]: [EstadoKanban.PROGRAMAR_1RA_ENTREVISTA, EstadoKanban.DESCARTADO],
+    [EstadoKanban.PROGRAMAR_1RA_ENTREVISTA]: [EstadoKanban.PROGRAMAR_2DA_ENTREVISTA, EstadoKanban.POSIBLES_CANDIDATOS, EstadoKanban.DESCARTADO],
+    [EstadoKanban.PROGRAMAR_2DA_ENTREVISTA]: [EstadoKanban.EVALUACION_ANTISOBORNO, EstadoKanban.POSIBLES_CANDIDATOS, EstadoKanban.DESCARTADO],
     [EstadoKanban.EVALUACION_ANTISOBORNO]: [EstadoKanban.APROBACION_GERENCIA, EstadoKanban.POSIBLES_CANDIDATOS, EstadoKanban.DESCARTADO],
     [EstadoKanban.APROBACION_GERENCIA]: [EstadoKanban.LLAMAR_COMUNICAR_ENTRADA, EstadoKanban.POSIBLES_CANDIDATOS, EstadoKanban.DESCARTADO],
     [EstadoKanban.LLAMAR_COMUNICAR_ENTRADA]: [EstadoKanban.FINALIZADA, EstadoKanban.RECHAZADO_POR_CANDIDATO, EstadoKanban.DESCARTADO],
     [EstadoKanban.FINALIZADA]: [], // Estado final
     [EstadoKanban.RECHAZADO_POR_CANDIDATO]: [EstadoKanban.POSIBLES_CANDIDATOS], // Puede reactivarse
     [EstadoKanban.DESCARTADO]: [], // Estado final
-    [EstadoKanban.POSIBLES_CANDIDATOS]: [EstadoKanban.REFERENCIAS] // Puede reactivarse
+    [EstadoKanban.POSIBLES_CANDIDATOS]: [EstadoKanban.PROGRAMAR_1RA_ENTREVISTA] // Puede reactivarse
   };
 
   return transicionesValidas[estadoActual]!.includes(estadoNuevo);

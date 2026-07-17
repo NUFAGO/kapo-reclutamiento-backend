@@ -7,6 +7,8 @@ export interface ComentarioAplicacion {
   aplicacionId: string
   candidatoId: string
   texto: string
+  /** URLs de adjuntos (imagen/PDF) subidos junto al comentario. */
+  archivos: string[]
   creadoPor: string
   creadoPorNombre: string
   /** Etapa del Kanban en la que se redactó (opcional, para contexto en historial). */
@@ -18,6 +20,7 @@ export interface CrearComentarioAplicacionInput {
   aplicacionId: string
   candidatoId: string
   texto: string
+  archivos?: string[]
   creadoPor: string
   creadoPorNombre: string
   estadoKanbanContext?: string

@@ -18,16 +18,9 @@ export class UploadResolver {
           return await ErrorHandler.handleError(
             async () => {
               const { file, config } = args;
-              
-              // Obtener configuración predefinida según el tipo
-              const uploadConfig = this.getUploadConfigByTipo(config.tipo);
-              
-              // Sobrescribir configuración si se proporciona
-              const finalConfig: FileUploadConfig = {
-                ...uploadConfig,
-                ...(config.maxFileSize && { maxFileSize: config.maxFileSize }),
-                ...(config.allowedTypes && { allowedMimeTypes: config.allowedTypes }),
-              };
+
+              // Config del tipo + overrides + subcarpeta opcional
+              const finalConfig = this.buildFinalConfig(config);
 
               // Usar el FileUploadService para subir el archivo
               const result = await FileUploadService.uploadGraphQLFile(file, finalConfig);
@@ -52,16 +45,9 @@ export class UploadResolver {
           return await ErrorHandler.handleError(
             async () => {
               const { files, config } = args;
-              
-              // Obtener configuración predefinida según el tipo
-              const uploadConfig = this.getUploadConfigByTipo(config.tipo);
-              
-              // Sobrescribir configuración si se proporciona
-              const finalConfig: FileUploadConfig = {
-                ...uploadConfig,
-                ...(config.maxFileSize && { maxFileSize: config.maxFileSize }),
-                ...(config.allowedTypes && { allowedMimeTypes: config.allowedTypes }),
-              };
+
+              // Config del tipo + overrides + subcarpeta opcional
+              const finalConfig = this.buildFinalConfig(config);
 
               // Usar el FileUploadService para subir múltiples archivos
               const result = await FileUploadService.uploadMultipleGraphQLFiles(files, finalConfig);
@@ -143,6 +129,33 @@ export class UploadResolver {
   }
 
   /**
+   * Construye la config final: config del tipo + overrides del cliente +
+   * subcarpeta opcional (sanitizada) anexada a la carpeta base.
+   */
+  private buildFinalConfig(config: any): FileUploadConfig {
+    const base = this.getUploadConfigByTipo(config.tipo);
+    const finalConfig: FileUploadConfig = {
+      ...base,
+      ...(config.maxFileSize && { maxFileSize: config.maxFileSize }),
+      ...(config.allowedTypes && { allowedMimeTypes: config.allowedTypes }),
+    };
+    const sub = this.sanitizarSubcarpeta(config.subcarpeta);
+    if (sub) {
+      finalConfig.folder = `${base.folder}/${sub}`;
+    }
+    return finalConfig;
+  }
+
+  /** Deja solo [a-z0-9_-] para evitar traversal/paths raros en el bucket. */
+  private sanitizarSubcarpeta(value: unknown): string {
+    return String(value ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '')
+      .slice(0, 64);
+  }
+
+  /**
    * Obtiene la configuración predefinida según el tipo de archivo
    */
   private getUploadConfigByTipo(tipo: string): FileUploadConfig {
@@ -153,6 +166,8 @@ export class UploadResolver {
         return FileUploadService.FOTOS_CANDIDATO_CONFIG;
       case 'EVIDENCIAS_ENTREVISTA':
         return FileUploadService.EVIDENCIAS_ENTREVISTA_CONFIG;
+      case 'COMENTARIOS':
+        return FileUploadService.COMENTARIOS_CONFIG;
       case 'DOCUMENTOS_CONVOCATORIA':
         return FileUploadService.DOCUMENTOS_CONVOCATORIA_CONFIG;
       case 'IMAGENES':

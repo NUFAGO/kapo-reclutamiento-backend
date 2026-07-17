@@ -23,9 +23,12 @@ type BatchUploadError {
 
 # Inputs
 input UploadConfigInput {
-  tipo: String! # CV_DOCUMENTOS, FOTOS_CANDIDATO, etc.
+  tipo: String! # CV_DOCUMENTOS, FOTOS_CANDIDATO, COMENTARIOS, etc.
   maxFileSize: Int
   allowedTypes: [String!]
+  # Subcarpeta opcional dentro de la carpeta del tipo (ej. la tabla del
+  # comentario: "aplicacion"). Se sanitiza a [a-z0-9_-].
+  subcarpeta: String
 }
 
 # Mutations

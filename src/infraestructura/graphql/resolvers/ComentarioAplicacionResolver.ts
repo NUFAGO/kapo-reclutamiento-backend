@@ -27,6 +27,7 @@ export class ComentarioAplicacionResolver {
             input: {
               aplicacionId: string
               texto: string
+              archivos?: string[] | null
               creadoPor: string
               creadoPorNombre: string
               estadoKanbanContext?: string | null
@@ -36,7 +37,8 @@ export class ComentarioAplicacionResolver {
           const i = args.input
           const base = {
             aplicacionId: String(i.aplicacionId),
-            texto: String(i.texto),
+            texto: String(i.texto ?? ''),
+            archivos: Array.isArray(i.archivos) ? i.archivos.map((a) => String(a)) : [],
             creadoPor: String(i.creadoPor),
             creadoPorNombre: String(i.creadoPorNombre),
           }

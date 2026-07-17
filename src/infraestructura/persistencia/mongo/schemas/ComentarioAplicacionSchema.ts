@@ -25,7 +25,8 @@ const ComentarioAplicacionSchema = new Schema<IComentarioAplicacionDocument>(
   {
     aplicacionId: { type: String, required: true, ref: 'AplicacionCandidato', index: true },
     candidatoId: { type: String, required: true, ref: 'Candidato', index: true },
-    texto: { type: String, required: true, maxlength: 4000, trim: true },
+    texto: { type: String, maxlength: 4000, trim: true, default: '' },
+    archivos: { type: [String], default: [] },
     creadoPor: { type: String, required: true, index: true },
     creadoPorNombre: { type: String, required: true },
     estadoKanbanContext: {
